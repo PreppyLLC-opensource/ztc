@@ -65,9 +65,6 @@ class PgConn(object):
         self.cur.close()
         self.dbh.close()
 
-import os
-
-# TODO: parse argv
 ztccheck = ZTCCheck('pgsql')
 config = ZTCCheck._get_config()
 
