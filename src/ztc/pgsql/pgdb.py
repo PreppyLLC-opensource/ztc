@@ -12,8 +12,12 @@ Requirements:
 import time
 
 from ztc.check import ZTCCheck, CheckFail
-import ztc.pgsql.queries as pgq
-from ztc.pgsql.pgconn import PgConn
+from ztc.pgsql.pgconn import PgConn, pg_version
+
+if pg_version < 90200:
+    import ztc.pgsql.queries as pgq
+else:
+    import ztc.pgsql.queries92p as pgq
 
 class PgDB(ZTCCheck):
     """ Connection to single database """

@@ -8,6 +8,8 @@ Copyright (c) 2010-2011 Vladimir Rusinov <vladimir@greenmice.info>
 """
 
 import psycopg2 as pg
+from ztc.check import MyConfigParser
+import logging
 
 class PgConn(object):
     dbh = None # database handler
@@ -61,4 +63,19 @@ class PgConn(object):
     
     def close(self):
         self.cur.close()
-        self.dbh.close()    
+        self.dbh.close()
+
+config = MyConfigParser()
+
+connect_dict = {
+    'host': config.get('host', None), # none = connect via socket
+    'user': config.get('user', 'postgres'),
+    'password': config.get('password', None),
+    'database': config.get('database', 'postgres')
+}
+
+dbconn = PgConn(connect_dict, logging)
+pg_version = int(dbconn.query('show server_version_num;')[0][0])
+dbconn.close()
+
+__ALL__ = ['PgConn', 'pg_version']

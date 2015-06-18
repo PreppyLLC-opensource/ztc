@@ -11,8 +11,12 @@ Copyright (c) 2011 Wrike, Inc. [http://www.wrike.com]
 import heapq
 
 from ztc.check import ZTCCheck, CheckFail
-from ztc.pgsql.pgconn import PgConn
-import ztc.pgsql.queries as pgq
+from ztc.pgsql.pgconn import PgConn, pg_version
+
+if pg_version < 90200:
+    import ztc.pgsql.queries as pgq
+else:
+    import ztc.pgsql.queries92p as pgq
 
 class PgCluster(ZTCCheck):
     """ Class represent database cluster """
