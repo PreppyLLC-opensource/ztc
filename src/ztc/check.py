@@ -76,7 +76,7 @@ class ZTCCheck(object):
                                                  "a",                                                                                                        
                                                  1*1024*1024, # max 1 M                                                                                                
                                                  10) # max 10 files
-        self.debug = True
+        # self.debug = True
         if self.debug:
             # setting stream handler
             sh = logging.StreamHandler()                                                                                                        
