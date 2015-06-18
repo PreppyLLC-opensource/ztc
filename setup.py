@@ -10,7 +10,7 @@ def fix_develop(arg):
         arg = 'install'
     return arg
 
-sys.argv = [fix_develop(arg) for arg in sys.argv]
+sys.argv = [fix_develop(arg) for arg in sys.argv if arg != '--no-deps']
 
 from distutils.core import setup
 import os
