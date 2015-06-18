@@ -8,7 +8,7 @@ Copyright (c) 2010-2011 Vladimir Rusinov <vladimir@greenmice.info>
 """
 
 import psycopg2 as pg
-from ztc.check import MyConfigParser
+from ztc.check import ZTCCheck
 import logging
 
 class PgConn(object):
@@ -68,11 +68,11 @@ class PgConn(object):
 import os
 
 # TODO: parse argv
-config = MyConfigParser()
-config.read(os.path.join('/etc/ztc', "pgsql.conf"))
+ztccheck = ZTCCheck('pgsql')
+config = ZTCCheck._get_config()
 
 connect_dict = {
-    'host': config.get('host', None), # none = connect via socket
+    'host': config.get('host', 'localhost'), # none = connect via socket
     'user': config.get('user', 'postgres'),
     'password': config.get('password', None),
     'database': config.get('database', 'postgres')
