@@ -8,6 +8,13 @@ import os
 import glob
 import sys
 
+def fix_develop(arg):
+    if arg == 'develop':
+        arg = 'install'
+    return arg
+
+sys.argv = [fix_develop(arg) for arg in sys.argv]
+
 setup(
       name='ztc',
       version = '13.02',
