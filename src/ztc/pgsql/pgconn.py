@@ -67,7 +67,7 @@ class PgConn(object):
 
 ZTCCheck.OPTPARSE_MAX_NUMBER_OF_ARGS = 255
 ztccheck = ZTCCheck('pgsql')
-config = ZTCCheck._get_config()
+config = ztccheck._get_config()
 
 connect_dict = {
     'host': config.get('host', 'localhost'), # none = connect via socket
