@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# pylint: disable=W0622
+
 # Copyright (c) 2006 Allan Saddi <allan@saddi.com>
+# Copyright (c) 2011 Vladimir Rusinov <vladimir@greenmice.info>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,13 +27,11 @@
 # SUCH DAMAGE.
 #
 # $Id$
-#
-# Copyright (c) 2011 Vladimir Rusinov <vladimir@greenmice.info>
 
 __author__ = 'Allan Saddi <allan@saddi.com>'
 __version__ = '$Revision$'
 
-import select
+import select  # @UnresolvedImport
 import struct
 import socket
 import errno
@@ -91,6 +93,7 @@ if __debug__:
     DEBUGLOG = '/tmp/fcgi_app.log'
 
     def _debug(level, msg):
+        # pylint: disable=W0702
         if DEBUG < level:
             return
 
@@ -101,6 +104,7 @@ if __debug__:
         except:
             pass
 
+
 def decode_pair(s, pos=0):
     """
     Decodes a name/value pair.
@@ -110,24 +114,25 @@ def decode_pair(s, pos=0):
     """
     nameLength = ord(s[pos])
     if nameLength & 128:
-        nameLength = struct.unpack('!L', s[pos:pos+4])[0] & 0x7fffffff
+        nameLength = struct.unpack('!L', s[pos:pos + 4])[0] & 0x7fffffff
         pos += 4
     else:
         pos += 1
 
     valueLength = ord(s[pos])
     if valueLength & 128:
-        valueLength = struct.unpack('!L', s[pos:pos+4])[0] & 0x7fffffff
+        valueLength = struct.unpack('!L', s[pos:pos + 4])[0] & 0x7fffffff
         pos += 4
     else:
         pos += 1
 
-    name = s[pos:pos+nameLength]
+    name = s[pos:pos + nameLength]
     pos += nameLength
-    value = s[pos:pos+valueLength]
+    value = s[pos:pos + valueLength]
     pos += valueLength
 
     return (pos, (name, value))
+
 
 def encode_pair(name, value):
     """
@@ -149,15 +154,17 @@ def encode_pair(name, value):
 
     return s + name + value
 
+
 class Record(object):
     """
     A FastCGI Record.
 
     Used for encoding/decoding records.
     """
-    def __init__(self, type=FCGI_UNKNOWN_TYPE, requestId=FCGI_NULL_REQUEST_ID):
+
+    def __init__(self, typ=FCGI_UNKNOWN_TYPE, requestId=FCGI_NULL_REQUEST_ID):
         self.version = FCGI_VERSION_1
-        self.type = type
+        self.type = typ
         self.requestId = requestId
         self.contentLength = 0
         self.paddingLength = 0
@@ -179,7 +186,7 @@ class Record(object):
                     continue
                 else:
                     raise
-            if not data: # EOF
+            if not data:  # EOF
                 break
             dataList.append(data)
             dataLen = len(data)
@@ -197,15 +204,16 @@ class Record(object):
 
         if length < FCGI_HEADER_LEN:
             raise EOFError
-        
+
         self.version, self.type, self.requestId, self.contentLength, \
                       self.paddingLength = struct.unpack(FCGI_Header, header)
 
-        if __debug__: _debug(9, 'read: fd = %d, type = %d, requestId = %d, '
+        if __debug__:
+            _debug(9, 'read: fd = %d, type = %d, requestId = %d, '
                              'contentLength = %d' %
                              (sock.fileno(), self.type, self.requestId,
                               self.contentLength))
-        
+
         if self.contentLength:
             try:
                 self.contentData, length = self._recvall(sock,
@@ -242,9 +250,10 @@ class Record(object):
 
     def write(self, sock):
         """Encode and write a Record to a socket."""
-        self.paddingLength = -self.contentLength & 7
+        self.paddingLength = - self.contentLength & 7
 
-        if __debug__: _debug(9, 'write: fd = %d, type = %d, requestId = %d, '
+        if __debug__:
+            _debug(9, 'write: fd = %d, type = %d, requestId = %d, '
                              'contentLength = %d' %
                              (sock.fileno(), self.type, self.requestId,
                               self.contentLength))
@@ -256,18 +265,19 @@ class Record(object):
         if self.contentLength:
             self._sendall(sock, self.contentData)
         if self.paddingLength:
-            self._sendall(sock, '\x00'*self.paddingLength)
+            self._sendall(sock, '\x00' * self.paddingLength)
+
 
 class FCGIApp(object):
-   
+
     def __init__(self, connect=None, host=None, port=None, filterEnviron=True):
         if host is not None:
             assert port is not None
-            connect=(host, port)
+            connect = (host, port)
 
         self._connect = connect
         self._filterEnviron = filterEnviron
-        
+
     def __call__(self, environ, start_response=None):
         # For sanity's sake, we don't care about FCGI_MPXS_CONN
         # (connection multiplexing). For every request, we obtain a new
@@ -296,18 +306,18 @@ class FCGIApp(object):
         self._fcgiParams(sock, requestId, {})
 
         # Transfer wsgi.input to FCGI_STDIN
-        content_length = int(environ.get('CONTENT_LENGTH') or 0)
+        #content_length = int(environ.get('CONTENT_LENGTH') or 0)
         s = ''
         while True:
-            chunk_size = min(content_length, 4096)
+            #chunk_size = min(content_length, 4096)
             #s = environ['wsgi.input'].read(chunk_size)
-            content_length -= len(s)
+            #content_length -= len(s)
             rec = Record(FCGI_STDIN, requestId)
             rec.contentData = s
             rec.contentLength = len(s)
             rec.write(sock)
-
-            if not s: break
+            if not s:
+                break
 
         # Empty FCGI_DATA stream
         rec = Record(FCGI_DATA, requestId)
@@ -348,16 +358,18 @@ class FCGIApp(object):
         pos = 0
         while True:
             eolpos = result.find('\n', pos)
-            if eolpos < 0: break
-            line = result[pos:eolpos-1]
+            if eolpos < 0:
+                break
+            line = result[pos:eolpos - 1]
             pos = eolpos + 1
 
             # strip in case of CR. NB: This will also strip other
             # whitespace...
             line = line.strip()
-            
+
             # Empty line signifies end of headers
-            if not line: break
+            if not line:
+                break
 
             # TODO: Better error handling
             header, value = line.split(':', 1)
@@ -378,7 +390,7 @@ class FCGIApp(object):
         # Set WSGI status, headers, and return result.
         #start_response(status, headers)
         #return [result]
-        
+
         return status, headers, result, err
 
     def _getConnection(self):
@@ -396,9 +408,10 @@ class FCGIApp(object):
             return sock
 
         # To be done when I have more time...
-        raise NotImplementedError, 'Launching and managing FastCGI programs not yet implemented'
-    
-    def _fcgiGetValues(self, sock, vars):
+        raise NotImplementedError(
+            'Launching and managing FastCGI programs not yet implemented')
+
+    def _fcgiGetValues(self, sock, vars):  # @ReservedAssignment
         # Construct FCGI_GET_VALUES record
         outrec = Record(FCGI_GET_VALUES)
         data = []
@@ -424,7 +437,7 @@ class FCGIApp(object):
         #print params
         rec = Record(FCGI_PARAMS, requestId)
         data = []
-        for name,value in params.items():
+        for name, value in params.items():
             data.append(encode_pair(name, value))
         data = ''.join(data)
         rec.contentData = data
@@ -446,7 +459,7 @@ class FCGIApp(object):
                 result[n] = environ[n]
             if n in self._environRenames:
                 result[self._environRenames[n]] = environ[n]
-                
+
         return result
 
     def _lightFilterEnviron(self, environ):
@@ -455,10 +468,3 @@ class FCGIApp(object):
             if n.upper() == n:
                 result[n] = environ[n]
         return result
-
-if __name__ == '__main__':
-    from flup.server.ajp import WSGIServer
-    app = FCGIApp(connect=('localhost', 4242))
-    #import paste.lint
-    #app = paste.lint.middleware(app)
-    WSGIServer(app).run()

@@ -1,10 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 '''
 MySQL script for ztc (mysql.ping item)
 Connects to db and executes trivial query
 
 Copyright (c) 2009-2011 Vladimir Rusinov <vladimir@greenmice.info>
-Licensed under GNU GPL v.3
+License: GNU GPL3
+
+This file is part of ZTC
+
 Currently supported metrics:
     * ping (float) - return number of seconds required to run simple query.
         Return 0 if failed

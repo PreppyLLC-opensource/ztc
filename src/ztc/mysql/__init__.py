@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# pylint: disable=F0401
 """
 MySQL module for ZTC
 
@@ -14,21 +15,19 @@ import MySQLdb
 #import ztc.commons
 from ztc.check import ZTCCheck, CheckFail
 
-class MyDB(ZTCCheck):    
+
+class MyDB(ZTCCheck):
     name = 'mysql'
-    
+
     OPTPARSE_MIN_NUMBER_OF_ARGS = 1
-    OPTPARSE_MAX_NUMBER_OF_ARGS = 2    
-    
-    #database='mysql'
-    #host='localhost'
-    #user='root'
-    #password=''
-    #unix_socket = None
-    
+    OPTPARSE_MAX_NUMBER_OF_ARGS = 2
+
+    conn = None  # database connections
+    cursor = None  # database cursor
+
     lasterr = None
     connected = None
-    
+
     #def __init__(self):
     #    self.config = ztc.commons.get_config('mysql')
     #    self.database = self.config.get('database', self.database)
@@ -36,9 +35,9 @@ class MyDB(ZTCCheck):
     #    self.user = self.config.get('user', self.user)
     #    self.password = self.config.get('password', self.password)
     #    self.unix_socket = self.config.get('unix_socket', self.unix_socket)
-    #    
-    #    self._connect()        
-        
+    #
+    #    self._connect()
+
     def _connect(self):
         if self.connected:
             return True
@@ -47,37 +46,29 @@ class MyDB(ZTCCheck):
         user = self.config.get('user', 'root')
         database = self.config.get('database', 'mysql')
         password = self.config.get('password', '')
-        default_file = self.config.get('default_file', None)
         try:
             # TODO: remove this if, filter arguments instead
             if unix_socket:
-                self.conn =  MySQLdb.connect (host = host,
-                           user = user,
-                           passwd = password,
-                           db = database,
-                           unix_socket = unix_socket,
-                           connect_timeout = 2
-                           )
-            elif default_file:
-                self.conn =  MySQLdb.connect (host = host,
-                           read_default_file = default_file,
-                           connect_timeout = 2
-                           )
+                self.conn = MySQLdb.connect(host=host,
+                           user=user,
+                           passwd=password,
+                           db=database,
+                           unix_socket=unix_socket,
+                           connect_timeout=2)
             else:
-                self.conn =  MySQLdb.connect (host = host,
-                           user = user,
-                           passwd = password,
-                           db = database,
-                           connect_timeout = 2
-                           )                
-            self.cursor = self.conn.cursor();
+                self.conn = MySQLdb.connect(host=host,
+                           user=user,
+                           passwd=password,
+                           db=database,
+                           connect_timeout=2)
+            self.cursor = self.conn.cursor()
             return True
         except MySQLdb.OperationalError:
             self.logger.error("Failed to connect to mysql")
             self.conn = None
             self.cursor = None
             return False
-    
+
     def _get(self, metric, *args, **kwargs):
         if metric == 'ping':
             return self._get_ping()
@@ -87,7 +78,7 @@ class MyDB(ZTCCheck):
             except IndexError:
                 raise CheckFail("not enough arguments - pass global status "
                                 "metric name as 2nd arg")
-    
+
     def _get_ping(self):
         """ calculate ping by executing very simple select """
         st = time.time()
@@ -96,26 +87,26 @@ class MyDB(ZTCCheck):
         else:
             self.query('SELECT 1')
             return time.time() - st
-    
+
     def _get_status(self, metric):
         if not self._connect():
             self.logger.error("get_status: could not connect to mysql")
+            # pylint: disable=E0702
             raise self.lasterr
         r = self.query('SHOW GLOBAL STATUS LIKE "%s"' % (self.escape(metric)))
         if r:
             return r[0][1]
         else:
-            raise CheckFail('uncknown global status metric: %s' % (metric ))
-        
-            
+            raise CheckFail('uncknown global status metric: %s' % (metric))
+
     def query(self, query):
         """ execute query and return all its results (fetchall) """
-        self.logger.debug("running query '%s'" % (query, ))
+        self.logger.debug("running query '%s'" % (query,))
         self.cursor.execute(query)
         return self.cursor.fetchall()
-    
-    def escape(self, str):
-        return MySQLdb.escape_string(str)        
+
+    def escape(self, s):
+        return MySQLdb.escape_string(s)
 
 if __name__ == '__main__':
     m = MyDB()

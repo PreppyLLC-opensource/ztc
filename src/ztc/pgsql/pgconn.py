@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#pylint: disable=W0142
 """
 Helper pgsql connection class
 
@@ -8,22 +9,22 @@ Copyright (c) 2010-2011 Vladimir Rusinov <vladimir@greenmice.info>
 """
 
 import psycopg2 as pg
-from ztc.check import ZTCCheck
-import logging
+
 
 class PgConn(object):
-    dbh = None # database handler
-    cur = None # database cursor
-    
+    dbh = None  # database handler
+    cur = None  # database cursor
+
     def __init__(self, connect_dict, logger):
         self.logger = logger
         self._connect(connect_dict)
-    
+        self.lasterr = None
+
     def _connect(self, connect_dict):
         """ Connect to database """
         if self.dbh:
             return True
-        
+
         # filtering connect_dict to remove all Nones:
         connect_dict = dict((k, v) for k, v in connect_dict.iteritems() \
                             if v is not None)
@@ -32,6 +33,7 @@ class PgConn(object):
             self.dbh = pg.connect(**connect_dict)
             self.cur = self.dbh.cursor()
             return True
+        # pylint: disable=W0703
         except  Exception, e:
             #raise
             self.logger.warn("Failed to connect to postgresql: %s" % e)
@@ -39,11 +41,11 @@ class PgConn(object):
             self.dbh = None
             self.cur = None
             return False
-    
+
     def query(self, sql):
         #self._connect()
         self.logger.debug("running query '%s'" % sql)
-        if self.cur:        
+        if self.cur:
             self.cur.execute(sql)
             ret = self.cur.fetchall()
         else:
@@ -51,7 +53,7 @@ class PgConn(object):
             ret = None
         #self.logger.debug("result:\n%s" % self.fineprint_results(ret))
         return ret
-        
+
     def fineprint_results(self, rets):
         """ Fine print query results """
         ret = ''
@@ -60,24 +62,7 @@ class PgConn(object):
                 ret += (str(cell) + ' | ')
             ret += "\n"
         return ret
-    
+
     def close(self):
         self.cur.close()
         self.dbh.close()
-
-ZTCCheck.OPTPARSE_MAX_NUMBER_OF_ARGS = 255
-ztccheck = ZTCCheck('pgsql')
-config = ztccheck._get_config()
-
-connect_dict = {
-    'host': config.get('host', 'localhost'), # none = connect via socket
-    'user': config.get('user', 'postgres'),
-    'password': config.get('password', None),
-    'database': config.get('database', 'postgres')
-}
-
-dbconn = PgConn(connect_dict, logging)
-pg_version = int(dbconn.query('show server_version_num;')[0][0])
-dbconn.close()
-
-__ALL__ = ['PgConn', 'pg_version']

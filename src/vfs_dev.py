@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """
 vfs_dev_* scripts item
 
@@ -22,7 +22,7 @@ Params:
         cur_ios: I/Os currently in progress
         time_io: time spent doing I/Os (ms)
         time_io_weidged: weighted time spent doing I/Os (ms)
-        
+
         health - smart disk health
     $2 - device name, e.g. 'sda'
 """

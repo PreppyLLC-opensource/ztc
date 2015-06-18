@@ -11,6 +11,7 @@
 * sys filesystem mounted to /sys/
 * smartmontools
 * zabbix allowed to run sudo
+* python ntplib module
 
 ################################################
 # PostgreSQL Template:

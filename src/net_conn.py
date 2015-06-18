@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """
 net.conn item sctipt
 
@@ -22,7 +22,7 @@ Params:
         'LISTEN'
         'CLOSING'
     Returns:
-        stdout: int, number of items in specified state 
+        stdout: int, number of items in specified state
 """
 
 from ztc.net import Conn

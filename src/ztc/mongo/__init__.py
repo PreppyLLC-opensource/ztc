@@ -14,15 +14,16 @@ import time
 from ztc.check import ZTCCheck, CheckFail
 from ztc.store import ZTCStore
 
+
 class Mongo(ZTCCheck):
     name = "mongo"
-    
+
     OPTPARSE_MAX_NUMBER_OF_ARGS = 3
-    
+
     connection = None
     db = None
     dbs = {}
-    
+
     def _connect(self):
         """ connect to mongodb """
         if not self.connection:
@@ -39,15 +40,24 @@ class Mongo(ZTCCheck):
         elif metric == 'operations':
             m = args[0]
             return self.get_operations(m)
+        elif metric == 'connections':
+            m = args[0]
+            return self.get_connections(m)
         elif metric == 'globallock':
             m = args[0]
             return self.get_globallock(m)
         elif metric == 'globallock_currentqueue':
             m = args[0]
             return self.get_globallock_currentqueue(m)
+        elif metric == 'globallock_activeclients':
+            m = args[0]
+            return self.get_globallock_activeclients(m)
         elif metric == 'bgflushing':
             m = args[0]
             return self.get_bgflushing(m)
+        elif metric == 'mem':
+            m = args[0]
+            return self.get_mem(m)
         elif metric == 'dbstats':
             # per-db metrics
             m = args[0]
@@ -57,7 +67,7 @@ class Mongo(ZTCCheck):
             return self.get_page_faults()
         else:
             raise CheckFail("uncknown metric: %s" % metric)
-    
+
     def get_ping(self):
         """ get ping to mongo db - time required to make a connection and
         execute simple query.
@@ -72,12 +82,12 @@ class Mongo(ZTCCheck):
             #print dir(self.db)
             #print dir(self.connection)
             info = self.connection.server_info()
-            if info and info.has_key('ok'):
+            if info and 'ok' in info:
                 return time.time() - st
-        except:
+        except pymongo.errors.AutoReconnect:  # @UndefinedVariable
             self.logger.exception("failed to connect to mongodb")
         return 0
-    
+
     def get_operations(self, m):
         """ get number of operations in specified state """
         self._connect()
@@ -105,6 +115,11 @@ class Mongo(ZTCCheck):
         cq = self.get_globallock('currentQueue')
         return cq[m]
 
+    def get_globallock_activeclients(self, m):
+        """ return globallock currentQueue related metrics """
+        cq = self.get_globallock('activeClients')
+        return cq[m]
+
     def get_serverstatus(self):
         """ returns output of serverstatus command (json parsed) """
         self._connect()
@@ -118,7 +133,7 @@ class Mongo(ZTCCheck):
         if dbname not in self.dbs:
             self.dbs[dbname] = self.connection[dbname]
         db = self.dbs[dbname]
-        
+
         # load dbstats for specified database
         c = ZTCStore('mongodb_dbstats_' + dbname, self.options, 120)
         dbstats = c.get()
@@ -142,3 +157,17 @@ class Mongo(ZTCCheck):
         st = self.get_serverstatus()
         ret = st['extra_info']['page_faults']
         return ret
+
+    def get_mem(self, m):
+        """ get memory metrics from db.serverStatus() """
+        data = self.get_serverstatus()['mem']
+        if m in ('resident', 'virtual', 'mapped', 'mappedWithJournal'):
+            ret = data[m] * 1024 * 1204
+        else:
+            ret = data[m]
+        return ret
+
+    def get_connections(self, m):
+        """ get number of from db.serverStatus() """
+        data = self.get_serverstatus()['connections']
+        return data[m]

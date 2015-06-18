@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#pylint: disable-msg=W0232
 """
 Nginx Status Log check class: calculates number of responses in given status
 (since last run)
@@ -20,26 +21,29 @@ cleaning of the log)
 This file is part of ZTC and distributed under the same license.
 http://bitbucket.org/rvs/ztc/
 
-Copyright (c) 2011 Vladimir Rusinov <vladimir@greenmice.info>
+Copyright (c) 2011-2012 Vladimir Rusinov <vladimir@greenmice.info>
 """
 
 from ztc.check import ZTCCheck, CheckFail
 from ztc.store import ZTCStore
 
+
 class NginxStatusLog(ZTCCheck):
     """ Nginx upsteam response min/avg/max calculation """
     name = 'nginx'
-    
+
     OPTPARSE_MIN_NUMBER_OF_ARGS = 2
-    OPTPARSE_MAX_NUMBER_OF_ARGS = 2    
-    
+    OPTPARSE_MAX_NUMBER_OF_ARGS = 2
+
+    #pylint: disable-msg=W0613
     def _get(self, metric=None, *args, **kwargs):
+        """ get metric """
         if metric == 'num':
             status = args[0]
             return self.get_status_num(status)
         else:
             CheckFail('uncknown metric %s' % metric)
-            
+
     def get_status_num(self, status):
         """ get number of requests returned given status """
         st = None
@@ -49,37 +53,39 @@ class NginxStatusLog(ZTCCheck):
         if not st:
             st = self.read_statuslog()
             self.save_to_store(st)
-            
+
         k = int(status)
-        if st.has_key(k):
+        if k in st:
             return st[k]
         else:
             return 0
-        
+
     def read_statuslog(self):
         """ really open timelog and calculate data """
         statuses = {}
-        
+
         fn = self.config.get('statuslog', '/var/log/nginx/status.log')
         f = open(fn, 'a+')
-        
+
         for l in f.readlines():
-            st = l.split()[0] # response time should be in first col
-            st = int(st) 
-            if statuses.has_key(st):
+            st = l.split()[0]  # response time should be in first col
+            st = int(st)
+            if st in statuses:
                 statuses[st] += 1
             else:
                 statuses[st] = 1
-            
+
         f.truncate(0)
         f.close()
-        
-        return statuses            
-    
+
+        return statuses
+
     def save_to_store(self, data):
+        """ Save fetched status to ZTCStore cache. """ 
         st = ZTCStore('nginx_statuses', self.options)
-        st.set(data)        
-    
+        st.set(data)
+
     def read_from_store(self):
+        """ Read from ZTCStore cache """
         st = ZTCStore('nginx_statuses', self.options)
-        return st.get()        
+        return st.get()
