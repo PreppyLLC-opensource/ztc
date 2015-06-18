@@ -9,7 +9,8 @@ Copyright (c) 2012 Murano Software [http://www.muranosoft.com]
 import glob
 import sys
 
-# fix for -e install
+# fix for -e install, ansible bug :c
+#
 def fix_develop(arg):
     if 'develop' in arg:
         arg = 'install'
