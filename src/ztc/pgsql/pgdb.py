@@ -112,7 +112,7 @@ class PgDB(ZTCCheck):
             raise CheckFail("unknown transaction state requested")
         
         ret = self.dbconn.query(q)
-        self.logger.info('ret =, ', ret, ', state =', state)
+        self.logger.debug('ret =, ', ret, ', state =', state)
         if ret:
             ret = ret[0][0]
             return abs(ret)
