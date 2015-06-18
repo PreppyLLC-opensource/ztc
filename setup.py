@@ -3,9 +3,6 @@
 ZTC setup file
 """
 
-from distutils.core import setup
-import os
-import glob
 import sys
 
 def fix_develop(arg):
@@ -14,6 +11,11 @@ def fix_develop(arg):
     return arg
 
 sys.argv = [fix_develop(arg) for arg in sys.argv]
+
+from distutils.core import setup
+import os
+import glob
+
 
 setup(
       name='ztc',
