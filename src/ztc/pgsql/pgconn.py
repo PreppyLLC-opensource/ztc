@@ -65,6 +65,7 @@ class PgConn(object):
         self.cur.close()
         self.dbh.close()
 
+ZTCCheck.OPTPARSE_MAX_NUMBER_OF_ARGS = 255
 ztccheck = ZTCCheck('pgsql')
 config = ZTCCheck._get_config()
 
