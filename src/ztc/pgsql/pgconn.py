@@ -65,7 +65,11 @@ class PgConn(object):
         self.cur.close()
         self.dbh.close()
 
+import os
+
+# TODO: parse argv
 config = MyConfigParser()
+config.read(os.path.join('/etc/ztc', "pgsql.conf"))
 
 connect_dict = {
     'host': config.get('host', None), # none = connect via socket
