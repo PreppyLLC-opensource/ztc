@@ -112,10 +112,9 @@ class PgDB(ZTCCheck):
             raise CheckFail("unknown transaction state requested")
         
         ret = self.dbconn.query(q)
+        self.logger.info('ret =, ', ret, ', state =', state)
         if ret:
             ret = ret[0][0]
-            if ret is None:
-                self.logger.info('ret is none, state =', state)
             return abs(ret)
         else:
             # no rows returned => no transactions in given state
