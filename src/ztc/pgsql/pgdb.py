@@ -109,11 +109,13 @@ class PgDB(ZTCCheck):
         elif state == 'running':
             q = pgq.TNX_AGE_RUNNING
         else:
-            raise CheckFail("uncknown transaction state requested")
+            raise CheckFail("unknown transaction state requested")
         
         ret = self.dbconn.query(q)
         if ret:
             ret = ret[0][0]
+            if ret is None:
+                self.logger.info('ret is none, state =', state)
             return abs(ret)
         else:
             # no rows returned => no transactions in given state

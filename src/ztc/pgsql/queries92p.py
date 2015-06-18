@@ -87,8 +87,8 @@ FROM pg_stat_activity
 WHERE
     state<>'<IDLE> in transaction'
     AND state<>'<IDLE>'
-    AND query NOT LIKE 'autovacuum%'
-    AND query NOT LIKE 'COPY%'
+    AND state NOT LIKE 'autovacuum%'
+    AND state NOT LIKE 'COPY%'
 """
 
 # buffer queries:
