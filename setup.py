@@ -6,7 +6,7 @@ ZTC setup file
 import sys
 
 def fix_develop(arg):
-    if arg == 'develop':
+    if 'develop' in arg:
         arg = 'install'
     return arg
 
